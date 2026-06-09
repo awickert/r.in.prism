@@ -1,0 +1,122 @@
+<h2>DESCRIPTION</h2>
+
+<em>r.in.prism</em> downloads PRISM gridded climate data from
+<a href="https://prism.oregonstate.edu/">Oregon State University's PRISM Climate Group</a>
+and imports raster maps into GRASS GIS.
+
+<p>
+Two dataset types are supported via the <b>mode</b> option:
+</p>
+
+<dl>
+  <dt><b>mode=timeseries</b> (default)</dt>
+  <dd>Downloads monthly or daily gridded data for a requested date range.
+  Each time step is imported as a separate raster map named
+  <tt>&lt;output&gt;_YYYYMM</tt> (monthly) or
+  <tt>&lt;output&gt;_YYYYMMDD</tt> (daily).</dd>
+
+  <dt><b>mode=normals</b></dt>
+  <dd>Downloads PRISM 30-year normals (1991–2020 base period) for
+  selected months. Maps are named <tt>&lt;output&gt;_01</tt> through
+  <tt>&lt;output&gt;_12</tt>. Use <b>months=</b> to import a subset of
+  months.</dd>
+</dl>
+
+<p>
+No authentication is required. All data are fetched directly from NOAA/OSU
+servers over HTTPS. PRISM data cover the conterminous United States (CONUS)
+only.
+</p>
+
+<p>
+Each downloaded GeoTiff is automatically reprojected and clipped to the
+current GRASS computational region via <em>r.import</em>.
+</p>
+
+<h2>NOTES</h2>
+
+<h3>Projection and resolution</h3>
+
+PRISM data are distributed in NAD83 geographic coordinates (EPSG:4269)
+at approximately 4 km (0.0417°) resolution, 1405 × 621 pixels, covering
+CONUS. <em>r.in.prism</em> uses <em>r.import</em> to reproject and clip
+to the current region in a single step; the region CRS is not restricted.
+
+<h3>Variables</h3>
+
+<table>
+  <tr><th>Code</th><th>Description</th><th>Units</th></tr>
+  <tr><td>ppt</td><td>Total precipitation</td><td>mm</td></tr>
+  <tr><td>tmin</td><td>Minimum temperature</td><td>°C</td></tr>
+  <tr><td>tmax</td><td>Maximum temperature</td><td>°C</td></tr>
+  <tr><td>tmean</td><td>Mean temperature</td><td>°C</td></tr>
+  <tr><td>tdmean</td><td>Mean dew point temperature</td><td>°C</td></tr>
+  <tr><td>vpdmin</td><td>Minimum vapour pressure deficit</td><td>hPa</td></tr>
+  <tr><td>vpdmax</td><td>Maximum vapour pressure deficit</td><td>hPa</td></tr>
+</table>
+
+<p>Units are as distributed by PRISM; no conversion is applied.</p>
+
+<h3>Space-time raster datasets</h3>
+
+Use the <b>-t</b> flag to register imported maps as a GRASS space-time
+raster dataset (<em>strds</em>). The strds is named <b>output</b>.
+For monthly maps, each map's temporal extent covers the full calendar month.
+For normals, a synthetic reference year of 2020 is used.
+
+<h3>Data availability</h3>
+
+<ul>
+  <li>Timeseries data are available from 1895-01 (monthly) or
+      1981-01-01 (daily) through near-present.</li>
+  <li>Very recent dates (last 1–2 months) may return 404 if provisional
+      data are not yet published. Missing dates are skipped with a
+      warning.</li>
+  <li>Normals are based on the 1991–2020 base period.</li>
+</ul>
+
+<h2>EXAMPLES</h2>
+
+Import monthly precipitation from 2000–2020:
+<div class="code"><pre>
+r.in.prism output=ppt_monthly variable=ppt start=2000-01 end=2020-12
+</pre></div>
+
+Import and register as a space-time raster dataset:
+<div class="code"><pre>
+r.in.prism output=ppt_monthly variable=ppt start=2000-01 end=2020-12 -t
+</pre></div>
+
+Import daily Tmax for a single month:
+<div class="code"><pre>
+r.in.prism output=tmax_daily variable=tmax frequency=daily start=2015-07-01 end=2015-07-31
+</pre></div>
+
+Import 30-year normal precipitation for all months:
+<div class="code"><pre>
+r.in.prism output=ppt_normal variable=ppt mode=normals
+</pre></div>
+
+Import 30-year normal temperatures for winter months only:
+<div class="code"><pre>
+r.in.prism output=tmin_winter variable=tmin mode=normals months=12,1,2
+</pre></div>
+
+<h2>REQUIREMENTS</h2>
+
+<ul>
+  <li>Python package: <tt>requests</tt></li>
+</ul>
+
+<h2>SEE ALSO</h2>
+
+<em>
+<a href="r.import.html">r.import</a>,
+<a href="t.create.html">t.create</a>,
+<a href="t.register.html">t.register</a>,
+<a href="v.in.ghcn.html">v.in.ghcn</a>
+</em>
+
+<h2>AUTHOR</h2>
+
+Andrew Wickert
